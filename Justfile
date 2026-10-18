@@ -138,3 +138,39 @@ set positional-arguments
 @destroy confirmation:
     if [[ "$1" != DESTROY ]]; then echo 'To delete all VMs, run: just destroy DESTROY' >&2; exit 2; fi
     vagrant destroy -f
+
+# -------- Optional bonus layer (does not change base bootstrap recipes) --------
+
+# Upgrade a working base environment with secure HAProxy stats, runtime API, and releases.
+@bootstrap-bonus:
+    bash bonus/bootstrap-bonus.sh
+
+# Pull the selected branch from GitHub, build it once, and roll it out.
+@deploy-github branch="main":
+    bash bonus/deploy-github.sh "$1"
+
+# Roll out an already built release ID from .artifacts/releases/.
+@deploy-release release:
+    bash bonus/rolling-release.sh deploy "$1"
+
+# Roll both web servers back to an installed release (e.g. baseline or a Git SHA).
+@rollback release:
+    bash bonus/rolling-release.sh rollback "$1"
+
+# List releases installed on each web server, including active symlink.
+@releases:
+    for vm in web-01 web-02; do echo "=== $vm ==="; vagrant ssh "$vm" -c 'readlink /opt/react-app/current || true; ls -1 /opt/react-app/releases/'; done
+
+# Show stats URLs (authentication is required).
+@stats:
+    echo 'LB-01: http://192.168.56.10:8404/haproxy-stats'
+    echo 'LB-02: http://192.168.56.11:8404/haproxy-stats'
+
+# Display the auto-generated stats credential for a selected LB, locally.
+@stats-password vm="lb-01":
+    case "$1" in lb-01|lb-02) ;; *) echo 'Choose lb-01 or lb-02' >&2; exit 2;; esac
+    vagrant ssh "$1" -c 'sudo cat /etc/ha-react/monitoring-password'
+
+# Verify release consistency, runtime sockets, protected stats, and base endpoints.
+@bonus-status:
+    bash bonus/check-bonus.sh

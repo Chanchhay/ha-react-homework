@@ -28,12 +28,13 @@ vagrant ssh lb-01 -c 'bash /vagrant/scripts/server-report.sh'
 
 ### What the deploy script does
 
-1. Runs `npm ci` and `npm run build` on **your host** so both backends use the *same production build*.
+1. Runs `npm ci` and `npm run build` on **your host** so both backends use the _same production build_.
 2. Uses Vagrant SSH to run itself in `--install` mode on WEB-01, then WEB-02.
 3. On each web VM, stops `react-app` briefly, copies the built `dist`, `server.mjs`, package manifests, installs locked production dependencies, sets `SERVER_ID`/`WEB_IP` in the supplied service file and restarts systemd.
 4. Verifies `/health` before moving to the next VM.
 
 **Assumptions:**
+
 - Project folder contains `Vagrantfile`, `react-app`, `scripts` at the same level.
 - `react-app/package-lock.json` exists (create with `npm install` on your host if missing).
 - Host has a recent Node.js compatible with the Vite project, npm, and Vagrant.

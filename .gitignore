@@ -1,3 +1,8 @@
 node_modules
 dist
 .vagrant
+tests
+.artifacts/
+.env
+.env.*
+!.env.example
